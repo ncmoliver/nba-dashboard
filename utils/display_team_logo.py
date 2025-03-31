@@ -61,7 +61,7 @@ def display_team_logo(selected_team, image_folder_path):
             if os.path.exists(image_file):
                 # Load and display the image
                 image = Image.open(image_file)
-                col5.image(image, use_container_width=True)
+                col5.image(image, width=500)
             else:
                 col5.write(f"Logo for {selected_team} not found.")
         else:
