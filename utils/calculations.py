@@ -1,7 +1,4 @@
 # utils/calculations.py
-
-
-
 def calculate_home_production(df):
     # Shooting Production Calculations
     #Calculate missed shots
@@ -63,9 +60,6 @@ def calculate_away_production(df):
     df['ft_opp_efficiency'] = df['ft_opp'] / df['fta_opp']
 
     return df
-
-
-
 
     
 def calculate_production(df):
