@@ -1,10 +1,19 @@
 import streamlit as st
-from utils.functions import load_data, recreate_dataframe
+from utils.functions import load_data, recreate_dataframe, get_metrics
 from utils.view_data_option import replace_nba_abbreviations
 from utils.calculations import calculate_production
 from utils.display_scatterplot import display_scatter
 from utils.display_team_logo import display_team_logo
+from utils.fetch_data import get_team_data
+from utils.display_barchart import create_player_vs_team_chart
+from openai import OpenAI
+from dotenv import load_dotenv
+import pandas as pd
+import os
+import plotly.graph_objects as go
 
+
+load_dotenv()
 def display_dashboard():
     st.set_page_config(layout="wide")
 
@@ -14,11 +23,19 @@ def display_dashboard():
     if "league_checkb" not in st.session_state:
         st.session_state.league_checkb = False
 
-    st.title("🏀NBA Dashboard")
 
+    column1, column2, column3 = st.columns([2, 1, 1])
+    column1.title("🏀NBA Dashboard")
+
+    
     # Select a season
     years = st.session_state.data['season'].unique()
-    selected_year = st.selectbox("Select a season", label_visibility="collapsed", options=years)
+    selected_year = column2.selectbox("Select a season", label_visibility="collapsed", options=years, key="selected_year")
+
+    # Validate if a year is selected
+    if not selected_year:
+        st.warning("Please select a season to proceed.")
+        return
 
     # Filter data by the selected year
     data = calculate_production(data)
@@ -31,16 +48,13 @@ def display_dashboard():
     if "selected_year_data" not in st.session_state:
         st.session_state.selected_year_data = data_by_year
 
-    with st.expander("View Sample Data"):
-        st.write(data_by_year.head())
-
     st.markdown("---")
 
     # Average League Production
-    st.markdown("### Average League Production")
-    st.sidebar.markdown("### Dashboard Toolbar")
-    st.sidebar.checkbox(label="Hide League Metrics", key="league_checkb")
-
+    cola, colb = st.columns([1, 3])
+    cola.checkbox(label="Hide League Metrics", key="league_checkb", label_visibility="collapsed")
+    colb.markdown("### Average League Production")
+    
     if not st.session_state.league_checkb:
         average_shooting_production = round(data_by_year["shooting_production"].mean(), 2)
         average_ancillary_production = round(data_by_year["ancillary_production"].mean(), 2)
@@ -61,6 +75,11 @@ def display_dashboard():
         key="team"
     )
 
+    # Validate if a team is selected
+    if not user_team or user_team == "League":
+        st.warning("Please select a team to view its data.")
+        return
+
     title = f"{selected_year} League Average Production vs Points"
     scatter_plot = display_scatter(data_by_year, user_team, title)
     st.plotly_chart(scatter_plot, use_container_width=True)
@@ -69,11 +88,11 @@ def display_dashboard():
 
     # Display Team Logo
     image_folder_path = "data/nba_logos/"
-    col5, col6 = st.columns([3, 10])
+    col5, col6, col7 = st.columns([3, 5, 2])
     if user_team and user_team != "League":
         with col5:
             display_team_logo(user_team, image_folder_path)
-        col6.markdown(f'# **{user_team}**')
+        col6.markdown(f'# **{selected_year} {user_team}**')
     else:
         st.write("Select a team to view its logo.")
 
@@ -83,7 +102,7 @@ def display_dashboard():
         average_team_ancillary_production = round(data_by_year[data_by_year["team"] == user_team]["ancillary_production"].mean(), 2)
         average_team_total_production = round(data_by_year[data_by_year["team"] == user_team]["total_production"].mean(), 2)
 
-        shooting_difference = round(average_team_shooting_production - average_shooting_production,2)
+        shooting_difference = round(average_team_shooting_production - average_shooting_production, 2)
         ancillary_difference = round(average_team_ancillary_production - average_ancillary_production, 2)
         total_difference = round(average_team_total_production - average_total_production, 2)
 
@@ -95,4 +114,37 @@ def display_dashboard():
         col5.metric(label="Average Total Production", value=average_team_total_production, delta=total_difference)
         col5.markdown("---")
 
-    
+    # Check if the selected team and year are in the session state
+    if "playerData" not in st.session_state:
+        player_data = pd.read_csv("data/nba_new.csv")
+        st.session_state.playerData = player_data
+
+    player_data = st.session_state.playerData
+
+    # Validate if player data exists for the selected team
+    if player_data[player_data["Team"] == user_team].empty:
+        st.warning(f"No player data available for {user_team} in {selected_year}.")
+        return
+
+    col6.selectbox(label="Choose A Player", options=player_data[player_data["Team"] == user_team]["PLAYER"].unique(), key="player")
+    col7.selectbox(label="", options=["Player Analysis", "Shooting Analysis", "Ancillary Analysis", "Total Production Analysis"], key="team_analysis")
+    col7.markdown("---")
+    condensed_players = get_team_data(player_data, user_team, selected_year)
+
+    # Validate if a player is selected
+    if "player" not in st.session_state or not st.session_state.player:
+        st.warning("Please select a player to view their metrics.")
+        return
+
+    with col7:
+        st.markdown("### Season Metrics")
+        shooting, ancillary, total = get_metrics(condensed_players, st.session_state.player)
+        st.metric(label="Shooting Production", value=shooting)
+        st.metric(label="Ancillary Production", value=ancillary)
+        st.metric(label="Total Production", value=total)
+
+        # Create and display the player vs team chart
+        metrics = ["shooting_production", "ancillary_production", "total_production"]
+        player_vs_team_chart = create_player_vs_team_chart(st.session_state.player, condensed_players, metrics)
+        col6.plotly_chart(player_vs_team_chart, use_container_width=True)
+

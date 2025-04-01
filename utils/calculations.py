@@ -66,3 +66,35 @@ def calculate_production(df):
     df = calculate_home_production(df)
     df = calculate_away_production(df)
     return df
+
+
+def calculate_player_production(df):
+    # Shooting Production Calculations
+    #Calculate missed shots
+
+    df['FGMI'] = df['FGA'] - df['FGM']
+    df['FG3MI'] = df['FG3A'] - df['FG3M']
+    df['FTMI'] = df['FTA'] - df['FTM']
+
+    df['fg_production'] = (df['FGM'] - df['FGMI']) * 2
+    df['fg3_production'] = (df['FG3M'] - df['FG3MI']) * 3
+    df['ft_production'] = (df['FTM'] - df['FTMI']) * 1
+
+    # Ancillary Production
+    key_number = 1  # Adjust this as needed
+    df['ancillary_production'] = ((df['AST'] * .25) + (df['OREB'] *.50) + (df['DREB'] *.25) - (df['TOV'] * .5)
+                                  + (df['STL'] * .5) + (df['BLK'] * .5) - (df['PF'] * .05))
+
+    #Shooting Production
+    # Shooting Production
+    df['shooting_production'] = df['fg_production'] + df['fg3_production'] + df['ft_production']
+
+    # Total Production
+    df['total_production'] = (df['shooting_production'] + df['ancillary_production'])
+
+    # Efficiency and Effectiveness
+    df['fg_efficiency'] = df['FGM'] / df['FGA']
+    df['fg3_efficiency'] = df['FG3M'] / df['FG3A']
+    df['ft_efficiency'] = df['FTM'] / df['FTA']
+
+    return df
