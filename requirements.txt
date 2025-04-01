@@ -1,0 +1,6 @@
+streamlit
+datasets
+pandas
+PIL
+plotly
+os
