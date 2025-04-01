@@ -22,7 +22,7 @@ def display_dashboard():
 
 
     column1, column2= st.columns([2, 1])
-    column1.markdown("**B A S K E T B A L L | E X P L A I N E D**")
+    column1.markdown("<h2 style-'text-align: center;'>B A S K E T B A L L | E X P L A I N E D</h2>", unsafe_allow_html=True)
     
     # Select a season
     years = st.session_state.data['season'].unique()
@@ -71,10 +71,6 @@ def display_dashboard():
         key="team"
     )
 
-    # Validate if a team is selected
-    if not user_team or user_team == "League":
-        st.warning("Please select a team to view its data.")
-        return
 
     title = f"{selected_year} League Average Production vs Points"
     scatter_plot = display_scatter(data_by_year, user_team, title)

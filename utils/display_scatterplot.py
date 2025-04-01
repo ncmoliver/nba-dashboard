@@ -33,22 +33,36 @@ color_map = {'Los Angeles Lakers': 'blue',
              'Washington Wizards': 'darkred',}
 
 
-@st.cache_resource
-def display_scatter(df, user_team, title):
+def display_scatter(data, team, title):
+    """
+    Creates a scatter plot for the given data.
 
-    if user_team != "League":
-        title = f"{user_team} Production vs Points"
-        scatter_plot = px.scatter(data_frame=df[df['team'] == user_team],
-                                color_discrete_map=color_map,
-                                x="total_production",
-                                y="pts",
-                                color='team',
-                                title=title)
-    else:
-        scatter_plot = px.scatter(data_frame=df,
-                                color_discrete_map=color_map,
-                                x="total_production",
-                                y="pts",
-                                color='team',
-                                title=title)
-    return scatter_plot
+    Args:
+        data (pd.DataFrame): The dataset containing production data.
+        team (str): The selected team or "League" for all teams.
+        title (str): The title of the scatter plot.
+
+    Returns:
+        plotly.graph_objects.Figure: The scatter plot figure.
+    """
+    if team != "League":
+        # Filter data for the selected team
+        data = data[data["team"] == team]
+
+    # Create the scatter plot
+    fig = px.scatter(
+        data,
+        x="total_production",
+        y="pts",
+        color="team",
+        hover_data=["team", "total_production", "pts"],
+        title=title
+    )
+
+    fig.update_layout(
+        xaxis_title="Total Production",
+        yaxis_title="Points",
+        template="plotly_white"
+    )
+
+    return fig
