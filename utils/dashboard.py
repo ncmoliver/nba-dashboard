@@ -133,7 +133,7 @@ def display_dashboard():
         return
 
     with col7:
-        st.markdown("### Season Metrics")
+        st.markdown("### Player Season Metrics")
         shooting, ancillary, total = get_metrics(condensed_players, st.session_state.player)
         st.metric(label="Shooting Production", value=shooting)
         st.metric(label="Ancillary Production", value=ancillary)
