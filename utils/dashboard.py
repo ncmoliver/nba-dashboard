@@ -24,13 +24,12 @@ def display_dashboard():
         st.session_state.league_checkb = False
 
 
-    column1, column2, column3 = st.columns([2, 1, 1])
-    column1.title("🏀NBA Dashboard")
-
+    column1, column2= st.columns([2, 1])
+    column1.markdown("**B A S K E T B A L L | E X P L A I N E D**")
     
     # Select a season
     years = st.session_state.data['season'].unique()
-    selected_year = column2.selectbox("Select a season", label_visibility="collapsed", options=years, key="selected_year")
+    selected_year = column2.selectbox("Select a season", options=years, key="selected_year")
 
     # Validate if a year is selected
     if not selected_year:
@@ -127,7 +126,7 @@ def display_dashboard():
         return
 
     col6.selectbox(label="Choose A Player", options=player_data[player_data["Team"] == user_team]["PLAYER"].unique(), key="player")
-    col7.selectbox(label="", options=["Player Analysis", "Shooting Analysis", "Ancillary Analysis", "Total Production Analysis"], key="team_analysis")
+    col7.selectbox(label="(inactive..developing feature)", options=["Player Analysis", "Shooting Analysis", "Ancillary Analysis", "Total Production Analysis"], key="team_analysis")
     col7.markdown("---")
     condensed_players = get_team_data(player_data, user_team, selected_year)
 
@@ -148,3 +147,8 @@ def display_dashboard():
         player_vs_team_chart = create_player_vs_team_chart(st.session_state.player, condensed_players, metrics)
         col6.plotly_chart(player_vs_team_chart, use_container_width=True)
 
+
+    st.markdown(
+        "<h6 style='text-align: center;'> 🕋 Built with Streamlit by Marques Oliver</h6>",
+        unsafe_allow_html=True
+        )
