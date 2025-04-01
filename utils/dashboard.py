@@ -15,7 +15,7 @@ def display_dashboard():
     st.set_page_config(layout="wide")
 
     if "data" not in st.session_state:
-        st.session_state.data = load_data("KDAM1/BasketballGames")
+        st.session_state.data = load_data("data/nba_team_stats.csv")
     data = st.session_state.data
     if "league_checkb" not in st.session_state:
         st.session_state.league_checkb = False
