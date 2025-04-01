@@ -6,14 +6,11 @@ from utils.display_scatterplot import display_scatter
 from utils.display_team_logo import display_team_logo
 from utils.fetch_data import get_team_data
 from utils.display_barchart import create_player_vs_team_chart
-from openai import OpenAI
-from dotenv import load_dotenv
 import pandas as pd
-import os
 import plotly.graph_objects as go
 
 
-load_dotenv()
+
 def display_dashboard():
     st.set_page_config(layout="wide")
 
