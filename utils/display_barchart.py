@@ -12,8 +12,14 @@ def create_player_vs_team_chart(player_name, condensed_data, metrics):
     Returns:
         plotly.graph_objects.Figure: The bar chart figure.
     """
-    # Extract the player's stats
-    player_stats = condensed_data[condensed_data["PLAYER"] == player_name][metrics].iloc[0]
+    # Filter player stats
+    player_stats = condensed_data[condensed_data["PLAYER"] == player_name][metrics]
+
+    # Check if player stats exist
+    if player_stats.empty:
+        raise ValueError(f"No data available for the selected player: {player_name}")
+
+    player_stats = player_stats.iloc[0]  # Safely access the first row
 
     # Calculate the team's average stats excluding the selected player
     team_average_stats = condensed_data[condensed_data["PLAYER"] != player_name][metrics].mean()

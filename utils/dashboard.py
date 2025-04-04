@@ -17,6 +17,9 @@ def display_dashboard():
     if "data" not in st.session_state:
         st.session_state.data = load_data("data/nba_team_stats.csv")
     data = st.session_state.data
+    if data.empty:
+        st.error("The data could not be loaded or is empty. Please check the data source.")
+        return
     if "league_checkb" not in st.session_state:
         st.session_state.league_checkb = False
 
@@ -25,7 +28,7 @@ def display_dashboard():
     column1.markdown("<h2 style-'text-align: center;'>B A S K E T B A L L | E X P L A I N E D</h2>", unsafe_allow_html=True)
     
     # Select a season
-    years = st.session_state.data['season'].unique()
+    years = ["All"] + st.session_state.data['season'].unique().tolist()
     selected_year = column2.selectbox("Select a season", options=years, key="selected_year")
 
     # Validate if a year is selected
@@ -39,7 +42,11 @@ def display_dashboard():
     data = recreate_dataframe(data, selected_columns)
     data = replace_nba_abbreviations(data, column="team")
     data = replace_nba_abbreviations(data, column="team_opp")
-    data_by_year = data[data['season'] == selected_year]
+
+    if selected_year != "All":
+        data_by_year = data[data['season'] == selected_year]
+    else:
+        data_by_year = data
 
     if "selected_year_data" not in st.session_state:
         st.session_state.selected_year_data = data_by_year
@@ -72,7 +79,7 @@ def display_dashboard():
     )
 
 
-    title = f"{selected_year} League Average Production vs Points"
+    title = f"{selected_year if selected_year != 'All' else 'All Seasons'} League Average Production vs Points"
     scatter_plot = display_scatter(data_by_year, user_team, title)
     st.plotly_chart(scatter_plot, use_container_width=True)
 
@@ -130,15 +137,21 @@ def display_dashboard():
 
     with col7:
         st.markdown("### Player Season Metrics")
-        shooting, ancillary, total = get_metrics(condensed_players, st.session_state.player)
-        st.metric(label="Shooting Production", value=shooting)
-        st.metric(label="Ancillary Production", value=ancillary)
-        st.metric(label="Total Production", value=total)
+        if st.session_state.player in condensed_players['PLAYER'].values:
+            shooting, ancillary, total = get_metrics(condensed_players, st.session_state.player)
+            st.metric(label="Shooting Production", value=shooting)
+            st.metric(label="Ancillary Production", value=ancillary)
+            st.metric(label="Total Production", value=total)
+        else:
+            st.warning(f"No metrics available for the selected player: {st.session_state.player}.")
 
         # Create and display the player vs team chart
         metrics = ["shooting_production", "ancillary_production", "total_production"]
-        player_vs_team_chart = create_player_vs_team_chart(st.session_state.player, condensed_players, metrics)
-        col6.plotly_chart(player_vs_team_chart, use_container_width=True)
+        try:
+            player_vs_team_chart = create_player_vs_team_chart(st.session_state.player, condensed_players, metrics)
+            col6.plotly_chart(player_vs_team_chart, use_container_width=True)
+        except ValueError as e:
+            col6.warning(str(e))
 
 
     st.markdown(
